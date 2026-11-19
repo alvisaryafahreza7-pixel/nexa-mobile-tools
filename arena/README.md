@@ -58,6 +58,32 @@ dari 11 / 7. Default tidak berubah, jadi battle lama tetap reproducible.
 ./orchestrate.zsh --mode penuh "uji penuh sesuai alur asli"
 ```
 
+## Otak peran (memori persisten)
+
+Tiap peran punya file otak di `brains/<role>.md`, berisi dua bagian:
+
+- **Pengetahuan tetap** — aturan, jalur cepat, dan preseden yang sudah terverifikasi.
+- **Ingatan battle** — pelajaran ringkas dari battle sebelumnya.
+
+Sebelum bekerja, tiap prompt otomatis dapat instruksi `## Otak peran` untuk membaca
+file ini. **Default: baca-saja** — agen tidak mengubah brain mana pun.
+
+Flag `--learn` mengaktifkan penulisan, tapi tetap aman:
+
+1. Agen hanya mengeluarkan **maksimal 1 baris** `PELAJARAN: ...` di akhir jawaban.
+2. **Orkestrator** (bukan agen) yang menambahkannya ke `## Ingatan battle`.
+3. Baris dengan pola secret (`ghp_`, `gho_`, `github_pat_`, private key, `token=`,
+   `password=`) ditolak otomatis.
+4. `## Pengetahuan tetap` tidak pernah disentuh.
+
+```sh
+./orchestrate.zsh --mode ringan "audit backup"          # baca otak, tanpa menulis
+./orchestrate.zsh --learn --mode ringan "audit backup"  # baca + simpan 1 pelajaran/peran
+```
+
+`brains/` **di-commit** ke git sebagai ingatan bersama. `history/` sengaja di-gitignore.
+Review `git diff` setelah `--learn` sebelum commit, karena isinya berasal dari teks agen.
+
 ## Bukti konsep sudah jalan
 Demo 2026-11-19: dua subagent paralel mengaudit backup & skill secara bersamaan.
 Hasil: backup utuh, 78 file / 77 nama skill unik. Waktu tunggu jauh lebih singkat
@@ -87,6 +113,7 @@ diulang tanpa kehilangan instruksi.
 - [x] Perkuat prompt dari pola `claude-code-agents`
 - [x] Uji battle 11 peran penuh (2026-11-19, lewat subagent internal, ~7 menit)
 - [x] Mode `cepat` + flag `--fast` (dry-run terverifikasi)
+- [x] Otak peran di `brains/` + flag `--learn` (default baca-saja)
 
 ## Catatan
 Satu sesi = satu proyek. Proyek ini hanya dikerjakan di sesi ini;

@@ -1,8 +1,9 @@
 #!/data/data/com.termux/files/usr/bin/sh
 # NEXA-AGENT-ARENA - orkestrator otomatis
 # Menjalankan tiap peran sebagai sesi OpenCode terpisah, melempar hasil ke tahap berikutnya.
-# Pakai: orchestrate.zsh [--mode cepat|ringan|sedang|penuh] [--fast] [--model provider/model] [--dry-run] <tugas>
+# Pakai: orchestrate.zsh [--mode cepat|ringan|sedang|penuh] [--fast] [--learn] [--model provider/model] [--dry-run] <tugas>
 # --fast: Planner∥Worker, lewati Synthesizer & Scribe (FINAL.md tetap dari Judge)
+# --learn: tiap peran boleh menulis 1 pelajaran ke brains/<role>.md (default: baca-saja)
 set -u
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -10,6 +11,7 @@ MODE="penuh"
 MODEL=""
 DRY=""
 FAST=""
+LEARN=""
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -17,10 +19,11 @@ while [ "$#" -gt 0 ]; do
     --model) MODEL="$2"; shift 2 ;;
     --dry-run) DRY="1"; shift ;;
     --fast) FAST="1"; shift ;;
+    --learn) LEARN="1"; shift ;;
     *) break ;;
   esac
 done
-[ "$#" -gt 0 ] || { echo "usage: orchestrate.zsh [--mode cepat|ringan|sedang|penuh] [--fast] [--model provider/model] [--dry-run] <tugas>"; exit 1; }
+[ "$#" -gt 0 ] || { echo "usage: orchestrate.zsh [--mode cepat|ringan|sedang|penuh] [--fast] [--learn] [--model provider/model] [--dry-run] <tugas>"; exit 1; }
 TASK="$*"
 
 case "$MODE" in
@@ -46,6 +49,24 @@ D="$("$ROOT/arena.zsh" new --mode "$MODE" "$TASK" 2>/dev/null)" || exit 1
 ID="$(basename "$D")"
 echo "BATTLE: $D ($MODE)" >&2
 
+# Tulis 1 pelajaran ke brains/<role>.md. Orkestrator yang menulis, bukan agen.
+learn_to_brain() {
+  role="$1"; lesson="$2"
+  BRAIN="$ROOT/brains/$role.md"
+  [ -f "$BRAIN" ] || return 0
+  # Tolak baris yang tampak seperti kredensial/secret.
+  case "$lesson" in
+    *ghp_*|*gho_*|*github_pat_*|*'BEGIN '*'PRIVATE KEY'*|*'token='*|*'password='*) 
+      echo "LEARN ditolak ($role): mengandung pola sensitif" >&2; return 0 ;;
+  esac
+  [ -n "$DRY" ] && { echo "DRY LEARN: $BRAIN <- $lesson"; return 0; }
+  if grep -q '^- (belum ada)$' "$BRAIN"; then
+    sed '/^- (belum ada)$/d' "$BRAIN" > "$BRAIN.tmp" && mv "$BRAIN.tmp" "$BRAIN"
+  fi
+  printf -- '- %s\n' "$lesson" >> "$BRAIN"
+  echo "LEARN $role -> brains/$role.md" >&2
+}
+
 run_role() {
   role="$1"
   ctx="$2"
@@ -55,10 +76,21 @@ run_role() {
   [ -s "$ctx" ] && set -- "$@" --file "$ctx"
   if [ -n "$DRY" ]; then
     printf 'DRY: opencode run %s "<%s>"\n' "$*" "$role"
+    [ -n "$LEARN" ] && printf 'LEARN-DRY: %s boleh kirim 1 baris PELAJARAN: -> brains/%s.md\n' "$role" "$role"
     return 0
   fi
-  [ -f "$D/$role.prompt.md" ] || cp "$D/$role.md" "$D/$role.prompt.md"
-  opencode run "$@" "$(cat "$D/$role.prompt.md")" > "$D/$role.jsonl" 2>"$D/$role.err" || true
+
+  PROMPT="$D/$role.prompt.md"
+  [ -f "$PROMPT" ] || cp "$D/$role.md" "$PROMPT"
+  if [ -n "$LEARN" ] && [ -f "$ROOT/brains/$role.md" ]; then
+    {
+      cat "$PROMPT"
+      printf '\n## Mode belajar (--learn)\nDi akhir jawaban, tambahkan MAKSIMAL 1 baris diawali `PELAJARAN: ` berisi pelajaran ringkas yang bisa dipakai ulang di battle berikutnya. Jangan tulis data sensitif. Ini satu-satunya pengecualian aturan baca-saja; jangan mengubah file apa pun.\n'
+    } > "$D/$role.run.md"
+    PROMPT="$D/$role.run.md"
+  fi
+
+  opencode run "$@" "$(cat "$PROMPT")" > "$D/$role.jsonl" 2>"$D/$role.err" || true
   if grep -q '"type":"error"' "$D/$role.jsonl" 2>/dev/null; then
     echo "GAGAL $role: $(jq -r 'select(.type=="error") | .error.message' "$D/$role.jsonl" | head -1)" >&2
     return 1
@@ -70,6 +102,10 @@ run_role() {
   fi
   if ! grep -q '^status:' "$D/$role.md" 2>/dev/null; then
     echo "PERINGATAN $role: tidak ada status block" >&2
+  fi
+  if [ -n "$LEARN" ]; then
+    lesson="$(grep -m1 '^PELAJARAN:' "$D/$role.md" 2>/dev/null | sed 's/^PELAJARAN:[[:space:]]*//')"
+    [ -n "$lesson" ] && learn_to_brain "$role" "$lesson"
   fi
   echo "SELESAI $role ($(wc -c < "$D/$role.md") byte)" >&2
 }

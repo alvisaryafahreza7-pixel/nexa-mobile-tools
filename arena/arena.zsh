@@ -31,7 +31,13 @@ case "${1:-}" in
     printf '%s\n' "$TASK" > "$D/task.txt"
     for role in $DAFTAR; do
       [ -f "$ROLES/$role.md" ] || { echo "role hilang: $role"; exit 1; }
-      sed "s|{{TASK}}|$TASK|g" "$ROLES/$role.md" > "$D/$role.md"
+      {
+        sed "s|{{TASK}}|$TASK|g" "$ROLES/$role.md"
+        BRAIN="$ROOT/brains/$role.md"
+        if [ -f "$BRAIN" ]; then
+          printf '\n## Otak peran\nBaca `%s` SEBELUM bekerja. Pakai pengetahuan tetapnya, tapi validasi ulang ingatan lama dengan bukti baru.\n' "$BRAIN"
+        fi
+      } > "$D/$role.md"
     done
     echo "mode: $MODE ($(echo $DAFTAR | wc -w) peran)" >&2
     echo "$D"
