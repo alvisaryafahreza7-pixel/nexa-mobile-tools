@@ -17,6 +17,7 @@ Offline-safe, berjalan di Termux, tanpa Wi-Fi.
 
 | Peran | Tugas | Agen yang dipakai |
 |---|---|---|
+| **Commander** | Meta-peran: jalankan arena secara internal, balikin satu output (pemanggil tinggal input→output) | `general` |
 | **Planner** | Memecah tugas jadi sub-tugas independence + kriteria sukses | `general` |
 | **Worker A** | Pendekatan langsung, paling hemat | `explore` / `general` |
 | **Worker B** | Pendekatan alternatif (pembanding) | `explore` / `general` |
@@ -37,6 +38,23 @@ Offline-safe, berjalan di Termux, tanpa Wi-Fi.
 5. Synthesizer gabungkan jadi satu draf.
 6. Judge putuskan jawaban akhir.
 7. Scribe simpan ringkasan singkat di `history/`.
+
+## Jalur tipis: input → output
+
+Kalau pemanggil cuma mau lempar tugas dan terima satu jawaban, panggil Commander
+sekali:
+
+```sh
+./dispatch.zsh commander "<tugas>"
+```
+
+Commander menjalankan lensa Planner, Worker A/B/C (tugas berbeda), Verifier,
+Challenger, Risk, Arbiter, dan Judge **secara internal dalam satu sesi**, lalu
+mengembalikan satu blok final. Agen utama tidak perlu menjalankan subagent lain.
+
+Catatan jujur: Commander itu satu agen, jadi tidak ada paralelisme lintas proses.
+Untuk keputusan besar yang butuh cross-check nyata, tetap pakai jalur 11 subagent
+lewat `--plan` + tool `subagent`.
 
 ## Mode & kecepatan
 
@@ -153,6 +171,7 @@ diulang tanpa kehilangan instruksi.
 - [x] Otak peran di `brains/` + flag `--learn` (default baca-saja)
 - [x] `dispatch.zsh` generik pakai variabel (`--list`, `--plan <file>`, `--broadcast`)
 - [x] Worker A/B/C dapat sub-tugas berbeda lewat file plan (`examples/plan.txt`)
+- [x] Peran `commander` — jalur input→output, orkestrasi internal satu agen
 
 ## Catatan
 Satu sesi = satu proyek. Proyek ini hanya dikerjakan di sesi ini;

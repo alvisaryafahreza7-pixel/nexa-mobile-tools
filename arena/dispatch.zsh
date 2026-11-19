@@ -16,6 +16,8 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 BRAINS="$ROOT/brains"
 HISTORY="$ROOT/history"
 ROLES="planner worker-a worker-b worker-c verifier challenger risk arbiter synthesizer judge scribe"
+# Meta-role: bukan bagian dari 11 peran battle, dipanggil sekali untuk input→output.
+META_ROLES="commander"
 
 agent_for() {
   case "$1" in
@@ -25,7 +27,7 @@ agent_for() {
 }
 
 valid_role() {
-  case " $ROLES " in *" $1 "*) return 0 ;; *) return 1 ;; esac
+  case " $ROLES $META_ROLES " in *" $1 "*) return 0 ;; *) return 1 ;; esac
 }
 
 build_prompt() {
@@ -74,6 +76,7 @@ dispatch_plan() {
 case "${1:-}" in
   --list)
     printf '%s\n' $ROLES
+    printf 'commander (meta: input->output)\n'
     exit 0
     ;;
   --plan)
