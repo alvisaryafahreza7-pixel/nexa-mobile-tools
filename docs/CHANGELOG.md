@@ -1,0 +1,22 @@
+# Changelog
+
+## 2026-11-19
+
+### nexa-drive (baru)
+- Auto-focus app target sebelum setiap perintah (pakai `monkey`, reuse instance)
+- Auto-retry saat bridge mengembalikan "tidak ada hasil"
+- `run "CMD;WAIT n;CMD;DUMP"` — batch dalam satu proses
+- Fallback otomatis ke mode legacy untuk bridge < 1.6.0
+- Shortcut `goto home|discover|players|api|settings`
+
+### NEXA Bridge v1.6.0 (versionCode 7)
+- Command baru: `FOCUS`, `TARGET`, `AUTO`
+- `DUMP` retry internal 3x100ms
+- `LAUNCH` otomatis mengarahkan target ke package yang dibuka
+- Target disimpan di SharedPreferences
+
+### NEXA ROBLOX ULTRA EXPLORER v2.2.1 (versionCode 5)
+- `#gameMore`: tombol "Muat lebih banyak" hilang kalau load-next menghasilkan 0 baris baru
+- v2.2.0 sebelumnya: perbaikan Single Player, paginasi cursor-aware, retry 429,
+  error state jujur, download avatar, chips Discover tanpa `filters_v5`,
+  KPI API dinamis, nested module, dan cleanup aset.

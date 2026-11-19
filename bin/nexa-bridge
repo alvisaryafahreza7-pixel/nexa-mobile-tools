@@ -1,0 +1,105 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# NEXA Bridge - kirim perintah ke HP lewat accessibility service.
+# Pakai: nexa-bridge <ACTION> [value]
+# Contoh: nexa-bridge PING | nexa-bridge DUMP | nexa-bridge CLICK_TEXT OK
+set -uo pipefail
+
+PKG="com.nexa.bridge"
+RESULT="$HOME/storage/downloads/nexa-bridge/result.txt"
+ACTION="${1:-PING}"
+if [ "$#" -gt 0 ]; then shift; fi
+# Gabungkan semua argumen setelah ACTION (SYSTEM get brightness, VOLUME music up, ...)
+VALUE="$*"
+
+if [ "$ACTION" = "--help" ] || [ "$ACTION" = "-h" ]; then
+  cat <<'EOF'
+NEXA Bridge - kontrol HP offline (tanpa root / Wi-Fi)
+
+Pakai:
+  nexa-bridge PING
+  nexa-bridge INFO
+  nexa-bridge DUMP
+  nexa-bridge CLICK_TEXT <teks>
+  nexa-bridge TAP <x,y>
+  nexa-bridge SWIPE <x1,y1,x2,y2>
+  nexa-bridge LONG_CLICK <x,y>
+  nexa-bridge DRAG <x1,y1,x2,y2>
+  nexa-bridge TYPE <teks>
+  nexa-bridge KEY <back|home|recents|notifications|quicksettings|power>
+  nexa-bridge LAUNCH <package>
+  nexa-bridge FOCUS <package>    (buka app + arahkan pembacaan UI ke app itu)
+  nexa-bridge TARGET <package>   (baca UI dari package tertentu, walau fokus di Termux)
+  nexa-bridge AUTO               (reset TARGET ke active window)
+  nexa-bridge USAGE              (riwayat pemakaian app 24 jam)
+  nexa-bridge APPS               (daftar app dengan launcher)
+  nexa-bridge NOTIFICATION       (notifikasi terakhir)
+  nexa-bridge CLIPBOARD_GET
+  nexa-bridge CLIPBOARD_SET <teks>
+  nexa-bridge SETTINGS <usage|overlay|battery|notification|accessibility|write>
+  nexa-bridge SYSTEM brightness <0-255>
+  nexa-bridge SYSTEM timeout <ms>
+  nexa-bridge SYSTEM auto_rotate <on|off>
+  nexa-bridge SYSTEM airplane <on|off>
+  nexa-bridge SYSTEM get <key>
+  nexa-bridge SYSTEM brightness_mode <auto|manual>
+  nexa-bridge SYSTEM font_scale <0.85..1.5>
+  nexa-bridge SYSTEM anim <on|off>
+  nexa-bridge SYSTEM stay_on <0..8 jam>
+  nexa-bridge SYSTEM time24 <0|1>
+  nexa-bridge SYSTEM night <yes|no|auto>
+  nexa-bridge SYSTEM dnd <on|off>    (butuh SETTINGS dnd)
+  nexa-bridge BATCH "PING;WAIT 500;KEY home"
+  nexa-bridge MACRO save <nama|PING;WAIT 500;...>
+  nexa-bridge MACRO run <nama> | list | delete <nama>
+  nexa-bridge HISTORY             (60 perintah terakhir)
+  nexa-bridge VOLUME <music|ring|alarm|notif|call> <level|up|down|mute>
+  nexa-bridge RINGER <normal|vibrate|silent>
+  nexa-bridge LOCK
+  nexa-bridge FIND <teks>         (cari node + koordinat)
+  nexa-bridge TEXT_GET <teks>
+  nexa-bridge SET_TEXT <target|teks>
+  nexa-bridge PERFORM_ACTION <target|click|long_click|...>
+  nexa-bridge SCROLL <target|forward|back>
+  nexa-bridge NOTIF_LIST | NOTIF_TAP <i> | NOTIF_ACTION <i> <j>
+  nexa-bridge APP_INFO <package>
+  nexa-bridge UNINSTALL <package>  (membuka dialog; kamu yang konfirmasi)
+  nexa-bridge CONTROL             (buka Bridge Control Center di layar HP)
+
+Hasil juga tersimpan di ~/storage/downloads/nexa-bridge/result.txt
+EOF
+  exit 0
+fi
+
+# Buka dashboard Control Center (Activity, bukan perintah broadcast).
+if [ "$ACTION" = "CONTROL" ] || [ "$ACTION" = "UI" ] || [ "$ACTION" = "DASHBOARD" ]; then
+  am start --user 0 -n "$PKG/.ControlCenterActivity" 2>&1 | head -n 3
+  exit 0
+fi
+
+OLD=""
+[ -f "$RESULT" ] && OLD="$(cat "$RESULT" 2>/dev/null)"
+
+am broadcast --user 0 -n "$PKG/.CommandReceiver" -a "$PKG.COMMAND" \
+  --es action "$ACTION" --es value "$VALUE" >/dev/null 2>&1
+
+for _ in $(seq 1 24); do
+  sleep 0.25
+  if [ -f "$RESULT" ]; then
+    NEW="$(cat "$RESULT" 2>/dev/null)"
+    if [ "$NEW" != "$OLD" ]; then
+      printf '%s\n' "$NEW"
+      exit 0
+    fi
+  fi
+done
+
+# Fallback baca lewat ContentProvider
+OUT="$(content query --uri content://com.nexa.bridge.provider/result \
+  --projection result 2>/dev/null | sed 's/^Row: [0-9]* result=//' | head -n 1)"
+if [ -n "$OUT" ] && [ "$OUT" != "$OLD" ]; then
+  printf '%s\n' "$OUT"
+  exit 0
+fi
+
+echo "ERROR tidak ada hasil dari bridge (service belum aktif?)"
+exit 1

@@ -1,0 +1,11 @@
+# Jangan pernah commit kredensial / biner / hasil build
+*.apk
+*.idsig
+*.jks
+*.keystore
+*PASS*
+*.png
+*.jpg
+result.txt
+__pycache__/
+.build/

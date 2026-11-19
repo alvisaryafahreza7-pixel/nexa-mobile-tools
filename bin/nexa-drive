@@ -1,0 +1,178 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# nexa-drive - wrapper cepat untuk mengawal HP lewat NEXA Bridge.
+# Menyimpan "target package" supaya DUMP/klik selalu di app yang sedang dikawal,
+# dan otomatis retry kalau bridge sempat tidak merespons.
+#
+# Pakai:
+#   nexa-drive focus <package>        # set app target + bawa ke foreground
+#   nexa-drive target                 # tampilkan target saat ini
+#   nexa-drive dump                   # DUMP dengan auto-retry
+#   nexa-drive click <teks>           # CLICK_TEXT di target
+#   nexa-drive tap <x,y>              # TAP
+#   nexa-drive type <teks>            # TYPE
+#   nexa-drive key <back|home|...>    # KEY
+#   nexa-drive find <teks>            # FIND
+#   nexa-drive goto <view>            # shortcut: home|discover|players|api|settings
+#   nexa-drive run "CMD;CMD;..."      # jalankan beberapa perintah dalam 1 koneksi
+#   nexa-drive raw <ACTION> [value]   # bridge perintah apa saja (auto-retry)
+set -uo pipefail
+
+BRIDGE="$HOME/.local/bin/nexa-bridge"
+STATE="$HOME/.nexa/drive-target"
+CAP="$HOME/.nexa/drive-cap"
+RETRY="${NEXA_DRIVE_RETRY:-4}"
+FOCUS_WAIT="${NEXA_DRIVE_FOCUS_WAIT:-2}"
+
+mkdir -p "$(dirname "$STATE")"
+
+log() { printf '[drive] %s\n' "$*" >&2; }
+
+get_target() { [ -f "$STATE" ] && cat "$STATE" 2>/dev/null || true; }
+set_target() { printf '%s' "$1" > "$STATE"; }
+
+# Kirim satu perintah ke bridge dengan retry bila hasilnya ERROR tidak ada hasil.
+bridge_raw() {
+  local action="$1"; shift
+  local value="$*" out="" i
+  case "$action" in
+    PING|TARGET|FOCUS|AUTO|INFO|HISTORY|VOLUME|RINGER|LOCK) ;;
+    *) ensure_focus ;;
+  esac
+  for i in $(seq 1 "$RETRY"); do
+    out="$("$BRIDGE" "$action" $value 2>&1)"
+    if printf '%s' "$out" | grep -q 'ERROR tidak ada hasil'; then
+      sleep 0.4
+      continue
+    fi
+    printf '%s\n' "$out"
+    return 0
+  done
+  printf 'ERROR DRIVE_RETRY_GAGAL %s %s\n' "$action" "$value"
+  return 1
+}
+
+has_target_cap() { [ -f "$CAP" ] && grep -q '^target$' "$CAP" 2>/dev/null; }
+
+# Bawa target ke foreground. Diperlukan untuk gesture (TAP/SWIPE/TYPE),
+# tapi TIDAK diperlukan untuk DUMP/CLICK/FIND bila bridge v1.6.0 sudah aktif.
+ensure_focus() {
+  local pkg
+  pkg="$(get_target)"
+  [ -z "$pkg" ] && return 0
+  # monkey LAUNCHER reuse instance yang sudah berjalan (tidak me-restart WebView).
+  monkey -p "$pkg" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1 \
+    || am start --user 0 -n "$pkg/.MainActivity" --activity-single-top >/dev/null 2>&1
+  sleep "$FOCUS_WAIT"
+}
+
+ACTION="${1:-dump}"
+if [ "$#" -gt 0 ]; then shift; fi
+VALUE="$*"
+
+case "$ACTION" in
+  focus)
+    set_target "$VALUE"
+    # Coba command FOCUS bawaan bridge v1.6.0; fallback ke LAUNCH bila belum ada.
+    FOCUS_OUT="$(bridge_raw FOCUS "$VALUE" 2>&1)"
+    if printf '%s' "$FOCUS_OUT" | grep -q '^OK FOCUS'; then
+      printf 'target\n' > "$CAP"
+    else
+      printf 'legacy\n' > "$CAP"
+    fi
+    # Android 12 membatasi background activity launch dari service,
+    # jadi tetap bawa ke depan lewat am start dari Termux.
+    ensure_focus
+    log "target = $VALUE"
+    printf '%s\n' "$FOCUS_OUT"
+    ;;
+  target)
+    log "target = $(get_target)"
+    ;;
+  clear)
+    : > "$STATE"
+    log "target dikosongkan"
+    ;;
+  dump|d)
+    ensure_focus
+    bridge_raw DUMP
+    ;;
+  click|c)
+    ensure_focus
+    bridge_raw CLICK_TEXT "$VALUE"
+    ;;
+  tap)
+    ensure_focus
+    bridge_raw TAP "$VALUE"
+    ;;
+  swipe)
+    ensure_focus
+    bridge_raw SWIPE "$VALUE"
+    ;;
+  type)
+    ensure_focus
+    bridge_raw TYPE "$VALUE"
+    ;;
+  key)
+    ensure_focus
+    bridge_raw KEY "$VALUE"
+    ;;
+  find)
+    ensure_focus
+    bridge_raw FIND "$VALUE"
+    ;;
+  goto)
+    case "$VALUE" in
+      home|beranda)       ensure_focus; bridge_raw CLICK_TEXT 'Home' ;;
+      discover|game)      ensure_focus; bridge_raw CLICK_TEXT 'Discover' ;;
+      players|pemain)     ensure_focus; bridge_raw CLICK_TEXT 'Players' ;;
+      api)                ensure_focus; bridge_raw CLICK_TEXT 'API Center' ;;
+      settings|pengaturan) ensure_focus; bridge_raw CLICK_TEXT 'Settings' ;;
+      *) log "goto unknown: $VALUE"; exit 2 ;;
+    esac
+    ;;
+  run)
+    # Jalankan setiap sub-perintah dipisah ';' dalam satu proses; auto-focus sekali.
+    ensure_focus
+    IFS=';' read -r -a CMDS <<< "$VALUE"
+    for cmd in "${CMDS[@]}"; do
+      cmd="$(printf '%s' "$cmd" | xargs)"
+      [ -z "$cmd" ] && continue
+      a="${cmd%% *}"
+      if [ "$a" = "$cmd" ]; then v=""; else v="${cmd#* }"; fi
+      printf '>> %s %s\n' "$a" "$v"
+      case "$a" in
+        WAIT) sleep "${v:-1}" ;;
+        FOCUS|focus)
+          set_target "$v"
+          printf 'target\n' > "$CAP"
+          ensure_focus
+          bridge_raw TARGET "$v" >/dev/null 2>&1
+          ;;
+        *) bridge_raw "$a" "$v" ;;
+      esac
+    done
+    ;;
+  raw)
+    bridge_raw "$ACTION" "$VALUE"
+    ;;
+  help|--help|-h)
+    cat <<'EOF'
+nexa-drive - pengawal HP cepat via NEXA Bridge
+
+  nexa-drive focus com.nexa.robloxultraexplorer   set target + foreground
+  nexa-drive dump                                DUMP (auto-retry)
+  nexa-drive click "Cari Pemain"                 klik by teks
+  nexa-drive tap 300,818                         tap koordinat
+  nexa-drive type Roblox                         ketik teks
+  nexa-drive goto players                        shortcut nav
+  nexa-drive run "click Players;WAIT 2;dump"     batch + auto-focus
+  nexa-drive raw PING                            perintah bridge apa saja
+
+Env: NEXA_DRIVE_RETRY (default 4), NEXA_DRIVE_FOCUS_WAIT (default 0.6)
+EOF
+    ;;
+  *)
+    log "aksi tidak dikenal: $ACTION (coba: nexa-drive help)"
+    exit 2
+    ;;
+esac
