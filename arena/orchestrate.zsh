@@ -53,12 +53,20 @@ run_role() {
     printf 'DRY: opencode run %s "<%s>"\n' "$*" "$role"
     return 0
   fi
-  opencode run "$@" "$(cat "$D/$role.md")" > "$D/$role.jsonl" 2>"$D/$role.err" || true
+  [ -f "$D/$role.prompt.md" ] || cp "$D/$role.md" "$D/$role.prompt.md"
+  opencode run "$@" "$(cat "$D/$role.prompt.md")" > "$D/$role.jsonl" 2>"$D/$role.err" || true
   if grep -q '"type":"error"' "$D/$role.jsonl" 2>/dev/null; then
     echo "GAGAL $role: $(jq -r 'select(.type=="error") | .error.message' "$D/$role.jsonl" | head -1)" >&2
     return 1
   fi
   jq -r 'select(.type=="text") | (.part.text // .text // empty)' "$D/$role.jsonl" > "$D/$role.md"
+  if grep -q '^status: ERROR' "$D/$role.md" 2>/dev/null; then
+    echo "GAGAL $role: agen melaporkan status ERROR" >&2
+    return 1
+  fi
+  if ! grep -q '^status:' "$D/$role.md" 2>/dev/null; then
+    echo "PERINGATAN $role: tidak ada status block" >&2
+  fi
   echo "SELESAI $role ($(wc -c < "$D/$role.md") byte)" >&2
 }
 

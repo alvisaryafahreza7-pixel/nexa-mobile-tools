@@ -43,12 +43,29 @@ Demo 2026-11-19: dua subagent paralel mengaudit backup & skill secara bersamaan.
 Hasil: backup utuh, 78 file / 77 nama skill unik. Waktu tunggu jauh lebih singkat
 daripada sequential, dan konteks agen utama tetap bersih.
 
+## Pola prompt yang dipakai
+Diadaptasi dari `undeadlist/claude-code-agents` (MIT) — salinan lokal ada di
+`~/NEXA-REF/claude-code-agents`. Kredit lengkap: `ATTRIBUTION.md`.
+
+1. **Status block** — tiap output diawali `agent`, `status`, `findings`, `errors`.
+   Orkestrator mendeteksi `status: ERROR` dan menghentikan battle.
+2. **Scope NON-OVERLAPPING** — tiap peran punya daftar "JANGAN lakukan", supaya
+   Worker A/B/C tidak mengerjakan hal yang sama.
+3. **Single authority** — Risk satu-satunya auditor bahaya, Arbiter satu-satunya
+   hakim konflik, Judge satu-satunya yang mengeluarkan jawaban final.
+4. **Aturan resolusi konflik** — tabel keputusan di `arbiter.md` (keparahan,
+   fakta vs opini, bukti kurang, temuan dobel), plus label prioritas P1-P4.
+
+Prompt asli disimpan sebagai `<role>.prompt.md` sebelum output ditimpa, jadi bisa
+diulang tanpa kehilangan instruksi.
+
 ## Status
-- [x] Desain & role
+- [x] Desain & 11 role
 - [x] Demo paralel 2 agen
-- [ ] Orkestrator otomatis (belum — kerangka `arena.zsh` baru menyiapkan prompt)
-- [ ] Uji battle 10 peran penuh
-- [ ] Scribe otomatis menulis ke `history/`
+- [x] Orkestrator otomatis (`orchestrate.zsh`, dry-run sudah lolos)
+- [x] Status block + deteksi ERROR
+- [x] Perkuat prompt dari pola `claude-code-agents`
+- [ ] Uji battle 11 peran penuh (tunggu kuota model reset)
 
 ## Catatan
 Satu sesi = satu proyek. Proyek ini hanya dikerjakan di sesi ini;
