@@ -15,6 +15,15 @@
 - `LAUNCH` otomatis mengarahkan target ke package yang dibuka
 - Target disimpan di SharedPreferences
 
+### Backup & restore (baru)
+- `scripts/backup-termux.sh` — Tier 1 default: `$HOME` + package-list + APK penting,
+  ke `~/storage/downloads/NEXA-BACKUPS/<stamp>/` + pointer `LATEST`
+- Tier 2 opsional `NEXA_BACKUP_PREFIX=1`: `$PREFIX` penuh (7,2 GB). Default mati
+  karena ruang terbatas; package bisa di-install ulang dari `package-list.txt`
+- `docs/RESTORE.md` — prosedur pemulihan Termux kehapus vs factory reset
+- `scripts/cleanup-home.sh` — dry-run by default, butuh backup terverifikasi
+  + `NEXA_CLEANUP_CONFIRM=1` untuk eksekusi
+
 ### NEXA ROBLOX ULTRA EXPLORER v2.2.1 (versionCode 5)
 - `#gameMore`: tombol "Muat lebih banyak" hilang kalau load-next menghasilkan 0 baris baru
 - v2.2.0 sebelumnya: perbaikan Single Player, paginasi cursor-aware, retry 429,
