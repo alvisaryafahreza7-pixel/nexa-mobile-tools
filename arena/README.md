@@ -38,6 +38,26 @@ Offline-safe, berjalan di Termux, tanpa Wi-Fi.
 6. Judge putuskan jawaban akhir.
 7. Scribe simpan ringkasan singkat di `history/`.
 
+## Mode & kecepatan
+
+| Mode | Agen | Tahap | Dipakai untuk |
+|---|---|---|---|
+| `cepat` | 2 (Worker A + Judge) | 2 | Cek sepele, ~1,5 menit |
+| `ringan` | 4 | 3 | Cek cepat, ~3 menit |
+| `sedang` | 8 | 6 | Audit menengah |
+| `penuh` | 11 | 7 | Keputusan besar, ~7 menit |
+
+Flag `--fast` memotong jalur: Planner ∥ Worker jalan bareng, Synthesizer dan Scribe
+dilewati (output Arbiter langsung jadi draf Judge; `FINAL.md` tetap disalin dari Judge,
+`SUMMARY.md` dibuat otomatis tanpa agen). Mode `penuh --fast` pakai **9 agen / 5 tahap**
+dari 11 / 7. Default tidak berubah, jadi battle lama tetap reproducible.
+
+```sh
+./orchestrate.zsh --mode cepat "cek cepat"
+./orchestrate.zsh --fast --mode penuh "keputusan besar tapi hemat waktu"
+./orchestrate.zsh --mode penuh "uji penuh sesuai alur asli"
+```
+
 ## Bukti konsep sudah jalan
 Demo 2026-11-19: dua subagent paralel mengaudit backup & skill secara bersamaan.
 Hasil: backup utuh, 78 file / 77 nama skill unik. Waktu tunggu jauh lebih singkat
@@ -65,7 +85,8 @@ diulang tanpa kehilangan instruksi.
 - [x] Orkestrator otomatis (`orchestrate.zsh`, dry-run sudah lolos)
 - [x] Status block + deteksi ERROR
 - [x] Perkuat prompt dari pola `claude-code-agents`
-- [ ] Uji battle 11 peran penuh (tunggu kuota model reset)
+- [x] Uji battle 11 peran penuh (2026-11-19, lewat subagent internal, ~7 menit)
+- [x] Mode `cepat` + flag `--fast` (dry-run terverifikasi)
 
 ## Catatan
 Satu sesi = satu proyek. Proyek ini hanya dikerjakan di sesi ini;

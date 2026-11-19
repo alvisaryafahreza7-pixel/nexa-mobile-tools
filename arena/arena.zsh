@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/sh
 # NEXA-AGENT-ARENA - menyiapkan folder battle + prompt peran
-# Mode: ringan (4 peran) / sedang (7) / penuh (10). Default: penuh.
+# Mode: cepat (2) / ringan (4) / sedang (8) / penuh (11). Default: penuh.
 # Belum menjalankan agen otomatis; agen utama yang memakai prompt hasil generate.
 set -eu
 
@@ -17,12 +17,13 @@ case "${1:-}" in
       shift 2
     fi
     case "$MODE" in
+      cepat)  DAFTAR="worker-a judge" ;;
       ringan) DAFTAR="planner worker-a worker-b judge" ;;
       sedang) DAFTAR="planner worker-a worker-b verifier risk arbiter synthesizer judge" ;;
       penuh)  DAFTAR="planner worker-a worker-b worker-c verifier challenger risk arbiter synthesizer judge scribe" ;;
-      *) echo "mode tidak dikenal: $MODE (pilih ringan|sedang|penuh)"; exit 1 ;;
+      *) echo "mode tidak dikenal: $MODE (pilih cepat|ringan|sedang|penuh)"; exit 1 ;;
     esac
-    [ "$#" -gt 0 ] || { echo "usage: arena.zsh new [--mode ringan|sedang|penuh] <tugas>"; exit 1; }
+    [ "$#" -gt 0 ] || { echo "usage: arena.zsh new [--mode cepat|ringan|sedang|penuh] <tugas>"; exit 1; }
     TASK="$*"
     ID="$(date +%Y%m%d-%H%M%S)-$$"
     D="$BATTLES/$ID"
@@ -39,7 +40,7 @@ case "${1:-}" in
     ls -1 "$BATTLES" 2>/dev/null || true
     ;;
   *)
-    echo "usage: arena.zsh new [--mode ringan|sedang|penuh] <tugas> | arena.zsh list"
+    echo "usage: arena.zsh new [--mode cepat|ringan|sedang|penuh] <tugas> | arena.zsh list"
     exit 1
     ;;
 esac
