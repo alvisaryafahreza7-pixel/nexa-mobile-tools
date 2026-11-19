@@ -68,12 +68,32 @@ Tiap peran punya file otak di `brains/<role>.md`, berisi tiga bagian:
 - **Pengetahuan tetap** — aturan, jalur cepat, dan preseden yang sudah terverifikasi.
 - **Ingatan battle** — pelajaran ringkas dari battle sebelumnya.
 
-Contoh nyuruh langsung (tanpa `arena.zsh new`):
+Nyuruh langsung pakai **variabel**, bukan hardcode per peran. `dispatch.zsh` mengisi
+`$ROLE`, `$TASK`, `$BRAIN`, `$AGENT`, `$ROLES`, `$HISTORY` otomatis:
+
+```sh
+./dispatch.zsh --list
+./dispatch.zsh worker-b "cari celah checksum backup"
+./dispatch.zsh --all "audit cepat"        # satu tugas untuk semua peran
+```
+
+Hasilnya satu prompt siap pakai. Di stderr ada metadata `AGENT=... BRAIN=... ROLE=...`
+supaya pemanggil tahu harus pakai agen `explore` atau `general`. Output contoh
+untuk `worker-b`:
 
 ```
-Kamu Worker B. Baca ~/NEXA-MOBILE-TOOLS/arena/brains/worker-b.md.
-Ikuti `## SOP eksekusi`-nya. Tugas: <tugas>. Kembalikan hanya output sesuai SOP.
+Kamu worker-b.
+Baca file ini SAJA sebagai instruksi lengkapmu:
+/data/.../arena/brains/worker-b.md
+Ikuti bagian `## SOP eksekusi` di dalamnya. ...
+Tugas: cari celah checksum backup
+Kembalikan HANYA output sesuai SOP (status block + batas baris peranmu).
 ```
+
+Nilai yang berubah-ubah (path backup, tanggal battle, jumlah file) **tidak di-hardcode**
+di otak — dibaca dari variabel/file yang resolusinya aktual, misalnya `LATEST`,
+`command -v nexa-drive`, `$ARENA_ROOT`. Angka lama hanya baseline dan harus divalidasi
+ulang tiap battle.
 
 Kalau tetap lewat orkestrator, tiap prompt otomatis dapat instruksi `## Otak peran`
 untuk membaca file ini. **Default: baca-saja** — agen tidak mengubah brain mana pun.
@@ -124,6 +144,7 @@ diulang tanpa kehilangan instruksi.
 - [x] Uji battle 11 peran penuh (2026-11-19, lewat subagent internal, ~7 menit)
 - [x] Mode `cepat` + flag `--fast` (dry-run terverifikasi)
 - [x] Otak peran di `brains/` + flag `--learn` (default baca-saja)
+- [x] `dispatch.zsh` generik pakai variabel (`--list`, `--all <tugas>`)
 
 ## Catatan
 Satu sesi = satu proyek. Proyek ini hanya dikerjakan di sesi ini;
