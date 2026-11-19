@@ -35,7 +35,7 @@ case "${1:-}" in
         sed "s|{{TASK}}|$TASK|g" "$ROLES/$role.md"
         BRAIN="$ROOT/brains/$role.md"
         if [ -f "$BRAIN" ]; then
-          printf '\n## Otak peran\nBaca `%s` SEBELUM bekerja. Pakai pengetahuan tetapnya, tapi validasi ulang ingatan lama dengan bukti baru.\n' "$BRAIN"
+          printf '\n## Otak peran\nBaca `%s` SEBELUM bekerja. Ikuti `## SOP eksekusi`-nya, pakai `## Pengetahuan tetap`-nya, dan validasi ulang `## Ingatan battle` dengan bukti baru. File ini cukup; tak perlu generate prompt lain.\n' "$BRAIN"
         fi
       } > "$D/$role.md"
     done

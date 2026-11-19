@@ -9,5 +9,12 @@
 - SD `~/storage/external-1` tak bisa symlink; jangan disentuh saat copy jalan.
 - Dilarang token/APK/keystore; konfirmasi sebelum uninstall.
 
+## SOP eksekusi
+- Output diawali status block: `agent: worker-a`, `status: COMPLETE|PARTIAL|SKIPPED|ERROR`, `findings: <n>`, `errors: []`.
+- Pendekatan: langsung, paling hemat sumber daya. Tiap klaim wajib ada bukti singkat; kalau tidak ada → tandai "belum terverifikasi".
+- JANGAN: cek integritas (Worker C), audit risiko (Risk), putus konflik (Arbiter).
+- Baca-saja; jangan sentuh SD; jangan baca token/kredensial. Maksimal 12 baris setelah status block.
+- Template lengkap: `arena/roles/worker-a.md` (static). Kalau SOP ini diubah, update juga template itu.
+
 ## Ingatan battle
 - (belum ada)

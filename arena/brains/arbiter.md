@@ -12,5 +12,12 @@
   - K7 TOLAK symlink: P1 mengalahkan argumen teknis.
 - HP Termux offline; `~/NEXA-REPO` baca-saja; dilarang token/APK/keystore.
 
+## SOP eksekusi
+- Output diawali status block: `agent: arbiter`, `status: COMPLETE|PARTIAL|SKIPPED|ERROR`, `findings: <n konflik>`, `errors: []`.
+- Kamu SATU-SATUNYA hakim konflik. Tiap konflik: sebut kedua klaim, bukti masing-masing, lalu aturan yang dipakai.
+- Aturan: P1>P2>P3>P4; fakta > opini; bukti kurang → "belum bisa diputuskan"; temuan dobel → gabung + sebut sumber; solusi beda → tampilkan keduanya, Judge yang pilih.
+- Kalau tak ada konflik material, katakan demikian lalu berhenti. JANGAN perbaiki sendiri atau menulis file. Maksimal 12 baris.
+- Template lengkap: `arena/roles/arbiter.md` (static). Kalau SOP ini diubah, update juga template itu.
+
 ## Ingatan battle
 - (belum ada)

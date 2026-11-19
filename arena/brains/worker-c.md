@@ -9,5 +9,12 @@
 - HP Termux offline; tanpa root; satu sesi = satu proyek. `~/NEXA-REPO` baca-saja.
 - Dilarang token/APK/keystore.
 
+## SOP eksekusi
+- Output diawali status block: `agent: worker-c`, `status: COMPLETE|PARTIAL|SKIPPED|ERROR`, `findings: <n>`, `errors: []`.
+- Pendekatan: integritas & kelengkapan. Cek yang hilang, rusak, tak konsisten, atau tak bisa diverifikasi. Jangan pakai jalur A/B.
+- JANGAN: ulang analisis A/B, audit risiko (Risk), putus konflik (Arbiter).
+- Baca-saja; jangan sentuh SD; jangan baca token/kredensial. Tiap klaim ada bukti. Maksimal 12 baris setelah status block.
+- Template lengkap: `arena/roles/worker-c.md` (static). Kalau SOP ini diubah, update juga template itu.
+
 ## Ingatan battle
 - (belum ada)

@@ -60,13 +60,23 @@ dari 11 / 7. Default tidak berubah, jadi battle lama tetap reproducible.
 
 ## Otak peran (memori persisten)
 
-Tiap peran punya file otak di `brains/<role>.md`, berisi dua bagian:
+Tiap peran punya file otak di `brains/<role>.md`, berisi tiga bagian:
 
+- **SOP eksekusi** — cara kerja lengkap peran itu (status block, scope, batas baris).
+  Jadi otaknya **sudah bisa dipakai sendiri**: cukup suruh agen baca file ini,
+  tanpa generate prompt baru.
 - **Pengetahuan tetap** — aturan, jalur cepat, dan preseden yang sudah terverifikasi.
 - **Ingatan battle** — pelajaran ringkas dari battle sebelumnya.
 
-Sebelum bekerja, tiap prompt otomatis dapat instruksi `## Otak peran` untuk membaca
-file ini. **Default: baca-saja** — agen tidak mengubah brain mana pun.
+Contoh nyuruh langsung (tanpa `arena.zsh new`):
+
+```
+Kamu Worker B. Baca ~/NEXA-MOBILE-TOOLS/arena/brains/worker-b.md.
+Ikuti `## SOP eksekusi`-nya. Tugas: <tugas>. Kembalikan hanya output sesuai SOP.
+```
+
+Kalau tetap lewat orkestrator, tiap prompt otomatis dapat instruksi `## Otak peran`
+untuk membaca file ini. **Default: baca-saja** — agen tidak mengubah brain mana pun.
 
 Flag `--learn` mengaktifkan penulisan, tapi tetap aman:
 

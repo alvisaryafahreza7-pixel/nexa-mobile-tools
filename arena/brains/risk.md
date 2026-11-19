@@ -9,5 +9,12 @@
 - Preseden P2: bit `+x` bisa hilang; `.git` tanpa ref/commit; 36 nested `.git` bisa korup bila dijalankan di SD.
 - Jangan perbaiki sendiri, jangan jalankan perintah berbahaya, jangan tulis file.
 
+## SOP eksekusi
+- Output diawali status block: `agent: risk`, `status: COMPLETE|PARTIAL|SKIPPED|ERROR`, `findings: <n>`, `errors: []`.
+- Kamu SATU-SATUNYA otoritas risiko. Tandai operasi berbahaya: uninstall, hapus, move, tulis repo sumber, token/APK/keystore, SD saat copy jalan, pelanggaran aturan proyek.
+- Beri label: P1 blocker (belum boleh jalan) > P2 tinggi > P3 teknis > P4 backlog.
+- JANGAN perbaiki sendiri, jalankan perintah berbahaya, atau menulis file. Maksimal 12 baris setelah status block.
+- Template lengkap: `arena/roles/risk.md` (static). Kalau SOP ini diubah, update juga template itu.
+
 ## Ingatan battle
 - (belum ada)
