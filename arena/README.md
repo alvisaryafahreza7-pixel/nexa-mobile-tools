@@ -7,7 +7,9 @@ Proyek aktif baru (menggantikan NEXA ROBLOX ULTRA EXPLORER yang sudah selesai).
 Offline-safe, berjalan di Termux, tanpa Wi-Fi.
 
 ## Prinsip
-- Pakai kemampuan **subagent yang sudah ada** (`explore`, `general`), bukan bikin skill baru.
+- Pakai kemampuan **subagent yang sudah ada** (`explore`, `general`) untuk prajurit.
+  Skill yang ada hanya pembungkus relay Boss (`~/NEXA-SKILLS/nexa-arena-boss`),
+  bukan agen baru.
 - Agen bekerja paralel; agen utama jadi komandan yang menggabungkan hasil.
 - Semua baca-saja terhadap repo sumber. Kalau butuh tulis, pakai folder staging sendiri.
 - Jangan pernah baca/cetak file berisi token, APK, keystore, atau kredensial.
@@ -70,6 +72,33 @@ dua fase dan Boss jadi pengantar mekanis:
 
 Captain yang **mengatur dan memutus**; Boss tidak ikut menilai, cuma menyampaikan
 perintah dan laporan 👌
+
+## Skill Boss: `@nexa-arena-boss`
+
+Biar alur di atas otomatis, ada skill di `~/NEXA-SKILLS/nexa-arena-boss/SKILL.md`
+(terdaftar lewat `"skills": ["~/NEXA-SKILLS"]` di config OpenCode, langsung aktif
+tanpa restart). Pemakai cukup kasih satu tugas; skill yang mengatur lima langkah:
+
+```
+ORDERS → orders.zsh → dispatch.zsh --plan → subagent prajurit → VERDICT → jawaban
+```
+
+Batasan jujur: tool `subagent` secara harfiah **tidak bisa** dipasang ke Captain,
+karena itu tool harness milik agen utama. Skill ini yang jadi "tangan" Captain:
+perintah Captain diterjemahkan jadi panggilan `subagent` nyata, laporannya balik
+lagi ke Captain. Jadi secara fungsi Captain memerintahkan prajurit, sedangkan
+Boss murni `suruh + terima`. Dari sisi pemakai: satu tugas masuk, satu VERDICT keluar.
+
+Skill **tidak** mengubah isi perintah Captain, tidak menambah opini Boss, dan tetap
+memaksa `worker-c` untuk tugas integritas (aturan sudah ada di otak Captain).
+
+Salinan versioned ada di `skills/nexa-arena-boss/SKILL.md` (path aktif tetap
+`~/NEXA-SKILLS/nexa-arena-boss/SKILL.md`). Kalau diubah, samakan keduanya.
+
+Bukti 2026-11-19: tugas "cek LATEST backup masih menunjuk ke folder yang ada" →
+Captain ORDERS memilih A+B+C (C otomatis karena validasi path) → A/B `COCOK`
+(path + metadata identik), C bantu cek symlink & baseline → Captain VERDICT
+`TERIMA`, dengan P2 mengingatkan `SHA256SUMS` masih 2 entri.
 
 ## Mode & kecepatan
 
@@ -186,7 +215,8 @@ diulang tanpa kehilangan instruksi.
 - [x] Otak peran di `brains/` + flag `--learn` (default baca-saja)
 - [x] `dispatch.zsh` generik pakai variabel (`--list`, `--plan <file>`, `--broadcast`)
 - [x] Worker A/B/C dapat sub-tugas berbeda lewat file plan (`examples/plan.txt`)
-- [x] Peran `commander` — jalur input→output, orkestrasi internal satu agen
+- [x] Peran `commander` — Captain dua fase (ORDERS → VERDICT), bukan agen baru
+- [x] Skill `@nexa-arena-boss` — otomatisasi relay Boss → Captain → prajurit → Captain
 
 ## Catatan
 Satu sesi = satu proyek. Proyek ini hanya dikerjakan di sesi ini;
