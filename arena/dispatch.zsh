@@ -3,12 +3,13 @@
 # Satu perintah untuk peran mana pun; semua path & peran diambil dari variabel.
 #
 # Pakai:
-#   ./dispatch.zsh <role> <tugas>      # prompt untuk satu peran (stdout)
-#   ./dispatch.zsh --list              # daftar peran yang punya otak
-#   ./dispatch.zsh --all <tugas>       # prompt untuk semua peran
+#   ./dispatch.zsh <role> <tugas>       # prompt untuk satu peran
+#   ./dispatch.zsh --list               # daftar peran yang punya otak
+#   ./dispatch.zsh --plan <file>        # TIAP peran punya tugas sendiri (dipakai untuk A/B/C)
+#   ./dispatch.zsh --broadcast <tugas>  # semua peran dapat tugas sama (jarang; A/B/C tetap beda sudut)
 #
-# stderr berisi metadata AGENT=/BRAIN=/ROLE= supaya pemanggil tahu agen mana
-# yang dipakai. stdout = prompt siap ditempel ke subagent.
+# Format file plan: satu baris `role: tugas`, baris `#` diabaikan.
+# stderr = metadata AGENT=/BRAIN=/ROLE=; stdout = prompt siap ditempel ke subagent.
 set -u
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -21,6 +22,10 @@ agent_for() {
     worker-a|worker-b|worker-c) echo explore ;;
     *) echo general ;;
   esac
+}
+
+valid_role() {
+  case " $ROLES " in *" $1 "*) return 0 ;; *) return 1 ;; esac
 }
 
 build_prompt() {
@@ -47,14 +52,39 @@ Pengecualian tulis hanya untuk Scribe -> folder history/ di $HISTORY.
 EOF
 }
 
+dispatch_plan() {
+  plan="$1"
+  [ -f "$plan" ] || { echo "plan tidak ada: $plan" >&2; return 1; }
+  n=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in ''|'#'*) continue ;; esac
+    role="$(printf '%s\n' "$line" | sed 's/:.*//')"
+    task="$(printf '%s\n' "$line" | sed 's/^[^:]*:[[:space:]]*//')"
+    valid_role "$role" || { echo "peran tidak dikenal: $role" >&2; return 1; }
+    [ -n "$task" ] || { echo "tugas kosong untuk: $role" >&2; return 1; }
+    printf '===== %s =====\n' "$role"
+    build_prompt "$role" "$task" || return 1
+    printf '\n'
+    n=$((n + 1))
+  done < "$plan"
+  [ "$n" -gt 0 ] || { echo "plan kosong: $plan" >&2; return 1; }
+  echo "PLAN: $n peran, masing-masing tugas berbeda" >&2
+}
+
 case "${1:-}" in
   --list)
-    printf '%s\n' $ROLES | tr ' ' '\n'
+    printf '%s\n' $ROLES
     exit 0
     ;;
-  --all)
+  --plan)
+    [ "$#" -eq 2 ] || { echo "usage: dispatch.zsh --plan <file>" >&2; exit 1; }
+    dispatch_plan "$2" || exit 1
+    exit 0
+    ;;
+  --all|--broadcast)
     shift
-    [ "$#" -gt 0 ] || { echo "usage: dispatch.zsh --all <tugas>" >&2; exit 1; }
+    [ "$#" -gt 0 ] || { echo "usage: dispatch.zsh --broadcast <tugas>" >&2; exit 1; }
+    echo "PERINGATAN: broadcast = semua peran dapat tugas SAMA. Worker A/B/C sebaiknya pakai --plan." >&2
     for r in $ROLES; do
       printf '===== %s =====\n' "$r"
       build_prompt "$r" "$@" || exit 1
@@ -64,5 +94,5 @@ case "${1:-}" in
     ;;
 esac
 
-[ "$#" -ge 2 ] || { echo "usage: dispatch.zsh <role> <tugas> | --list | --all <tugas>" >&2; exit 1; }
+[ "$#" -ge 2 ] || { echo "usage: dispatch.zsh <role> <tugas> | --list | --plan <file> | --broadcast <tugas>" >&2; exit 1; }
 build_prompt "$@"

@@ -73,9 +73,16 @@ Nyuruh langsung pakai **variabel**, bukan hardcode per peran. `dispatch.zsh` men
 
 ```sh
 ./dispatch.zsh --list
-./dispatch.zsh worker-b "cari celah checksum backup"
-./dispatch.zsh --all "audit cepat"        # satu tugas untuk semua peran
+./dispatch.zsh worker-b "cari celah checksum backup"   # satu peran
+./dispatch.zsh --plan examples/plan.txt                # TIAP peran dapat tugas berbeda
+./dispatch.zsh --broadcast "audit cepat"               # tugas sama untuk semua (jarang)
 ```
+
+**Worker A/B/C tidak boleh dapat tugas yang sama.** Mereka menerima sub-tugas
+berbeda dari Planner, lalu tiap otak menerjemahkannya ke sudutnya sendiri:
+A langsung, B alternatif, C integritas. `--plan` memastikan ini lewat format
+`role: tugas` satu baris per peran; peran yang tidak dikenal ditolak otomatis.
+Contoh nyata ada di `examples/plan.txt`.
 
 Hasilnya satu prompt siap pakai. Di stderr ada metadata `AGENT=... BRAIN=... ROLE=...`
 supaya pemanggil tahu harus pakai agen `explore` atau `general`. Output contoh
@@ -144,7 +151,8 @@ diulang tanpa kehilangan instruksi.
 - [x] Uji battle 11 peran penuh (2026-11-19, lewat subagent internal, ~7 menit)
 - [x] Mode `cepat` + flag `--fast` (dry-run terverifikasi)
 - [x] Otak peran di `brains/` + flag `--learn` (default baca-saja)
-- [x] `dispatch.zsh` generik pakai variabel (`--list`, `--all <tugas>`)
+- [x] `dispatch.zsh` generik pakai variabel (`--list`, `--plan <file>`, `--broadcast`)
+- [x] Worker A/B/C dapat sub-tugas berbeda lewat file plan (`examples/plan.txt`)
 
 ## Catatan
 Satu sesi = satu proyek. Proyek ini hanya dikerjakan di sesi ini;

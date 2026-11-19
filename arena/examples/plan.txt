@@ -1,0 +1,13 @@
+# Format: role: tugas spesifik per peran (satu baris tiap peran)
+# Baris diawali # diabaikan. Pakai: ./dispatch.zsh --plan examples/plan.txt
+planner: pecah audit backup jadi sub-tugas yang kriteria suksesnya bisa dicek
+worker-a: cek apakah arsip termux-home-full.tar.gz bisa dibaca dan ukurannya masuk akal
+worker-b: cek apakah APK di folder backup lengkap dan tercantum di SHA256SUMS
+worker-c: cek apakah file LATEST menunjuk ke folder yang ada dan isinya konsisten
+verifier: cocokkan temuan A/B/C dengan kriteria dari Planner
+challenger: serang temuan A/B/C yang belum ada buktinya
+risk: audit operasi berbahaya yang disarankan A/B/C
+arbiter: putuskan konflik antar temuan A/B/C
+synthesizer: gabungkan semua temuan jadi satu draf, soroti perdebatan
+judge: keluarkan keputusan akhir berbasis putusan Arbiter
+scribe: ringkas eksekusi ke folder history/

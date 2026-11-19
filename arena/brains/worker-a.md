@@ -12,6 +12,7 @@
 ## SOP eksekusi
 - Output diawali status block: `agent: worker-a`, `status: COMPLETE|PARTIAL|SKIPPED|ERROR`, `findings: <n>`, `errors: []`.
 - Pendekatan: langsung, paling hemat sumber daya. Tiap klaim wajib ada bukti singkat; kalau tidak ada → tandai "belum terverifikasi".
+- Tugasmu adalah **sub-tugas spesifik dari Planner**, bukan tugas umum. Kalau dapat tugas umum, terjemahkan ke sudutmu; jangan kerjakan sub-tugas peran lain.
 - JANGAN: cek integritas (Worker C), audit risiko (Risk), putus konflik (Arbiter).
 - Baca-saja; jangan sentuh SD; jangan baca token/kredensial. Maksimal 12 baris setelah status block.
 - Template lengkap: `arena/roles/worker-a.md` (static). Kalau SOP ini diubah, update juga template itu.
