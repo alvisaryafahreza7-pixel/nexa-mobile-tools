@@ -8,6 +8,7 @@
 - Otak prajurit: `$ARENA_ROOT/brains/<role>.md`, `ARENA_ROOT=~/NEXA-MOBILE-TOOLS/arena`. Baca sebelum memakai lensanya.
 - Variabel, bukan hardcode: `$ROLES`, `$BK` (dari `LATEST`), `$ARENA_ROOT`. Cek ulang angka baseline.
 - Worker A/B/C WAJIB dapat tugas berbeda: A langsung, B alternatif, C integritas.
+- Kalau tugasnya soal integritas/checksum/kelengkapan/validasi path, captain WAJIB memerintahkan worker-c — jangan cuma A+B.
 - Aturan Arbiter: P1>P2>P3>P4; fakta > opini; bukti kurang → "belum bisa diputuskan"; temuan dobel → gabung + sebut sumber.
 - Risk: P1 blocker (repo sumber immutable, uninstall butuh konfirmasi, jangan SMS/kontak/kamera/mikrofon/lokasi/admin, jangan token/APK/keystore).
 - Preseden: TOLAK symlink `~/NEXA-REPO` → SD; `SHA256SUMS.txt` backup hanya 2 entri (APK tak ter-checksum); glob `NEXA-CODELAB*.apk` case-sensitive → perbaikannya case-insensitif / daftar eksplisit.

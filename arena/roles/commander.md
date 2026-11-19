@@ -20,6 +20,8 @@ Ada dua fase. Ikuti yang diminta di Tugas:
 - Jangan memutus hasil, jangan buat jawaban akhir.
 - Susun sub-tugas BERBEDA untuk prajurit yang diperlukan (A langsung,
   B alternatif, C integritas).
+- Untuk tugas integritas, checksum, kelengkapan, atau validasi path:
+  **WAJIB sertakan worker-c**. Jangan hanya A/B.
 - Output persis:
   FASE: ORDERS
   ORDERS:
