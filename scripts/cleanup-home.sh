@@ -10,7 +10,9 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 ARCHIVE="$HOME/NEXA-CLEANUP-ARCHIVE/$STAMP"
 LATEST="$HOME/storage/downloads/NEXA-BACKUPS/LATEST"
 
-CACHE_DIRS=(.cache autom4te.cache android-sdk-extract .gradle .npm node_modules NEXA-backups)
+CACHE_DIRS=(autom4te.cache android-sdk-extract .gradle .npm node_modules NEXA-backups)
+# .cache tidak dihapus seluruhnya: opencode & codebase-memory dipertahankan.
+CACHE_KEEP=(opencode codebase-memory-mcp)
 LOG_PATTERNS=(
   '.nexa-*.log'
   '.bashrc.bak-*' '.bashrc-before-*' '.bash_profile.before-*'
@@ -51,6 +53,7 @@ log "=== RENCANA ==="
 for d in "${TARGETS[@]}"; do
   log "HAPUS  $d  ($(du -sh "$HOME/$d" 2>/dev/null | cut -f1))"
 done
+log "BERSIHKAN .cache (kecuali: ${CACHE_KEEP[*]})  ($(du -sh "$HOME/.cache" 2>/dev/null | cut -f1))"
 for f in "${LOGS[@]}"; do
   log "ARSIPKAN  ${f#$HOME/}"
 done
@@ -73,5 +76,13 @@ log "Menghapus ${#TARGETS[@]} folder cache..."
 for d in "${TARGETS[@]}"; do
   rm -rf "$HOME/$d" 2>/dev/null && log "terhapus: $d" || log "gagal hapus: $d"
 done
+
+log "Membersihkan isi .cache (kecuali ${CACHE_KEEP[*]})..."
+if [ -d "$HOME/.cache" ]; then
+  KEEP_ARGS=()
+  for k in "${CACHE_KEEP[@]}"; do KEEP_ARGS+=(! -name "$k"); done
+  find "$HOME/.cache" -mindepth 1 -maxdepth 1 "${KEEP_ARGS[@]}" -exec rm -rf {} + 2>/dev/null
+  log "tersisa di .cache: $(ls -1A "$HOME/.cache" 2>/dev/null | tr '\n' ' ')"
+fi
 
 log "SELESAI. Sisa ruang: $(df -h "$HOME" 2>/dev/null | awk 'NR==2{print $4}')"
