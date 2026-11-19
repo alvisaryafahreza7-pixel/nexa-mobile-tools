@@ -17,7 +17,7 @@ Offline-safe, berjalan di Termux, tanpa Wi-Fi.
 
 | Peran | Tugas | Agen yang dipakai |
 |---|---|---|
-| **Commander** | Meta-peran: jalankan arena secara internal, balikin satu output (pemanggil tinggal input→output) | `general` |
+| **Commander** | Captain: menyusun perintah untuk prajurit & memutus hasil; Boss tinggal arahan + jawaban | `general` |
 | **Planner** | Memecah tugas jadi sub-tugas independence + kriteria sukses | `general` |
 | **Worker A** | Pendekatan langsung, paling hemat | `explore` / `general` |
 | **Worker B** | Pendekatan alternatif (pembanding) | `explore` / `general` |
@@ -39,22 +39,37 @@ Offline-safe, berjalan di Termux, tanpa Wi-Fi.
 6. Judge putuskan jawaban akhir.
 7. Scribe simpan ringkasan singkat di `history/`.
 
-## Jalur tipis: input → output
+## Hierarki: Boss → Captain → prajurit
 
-Kalau pemanggil cuma mau lempar tugas dan terima satu jawaban, panggil Commander
-sekali:
-
-```sh
-./dispatch.zsh commander "<tugas>"
+```
+Boss (agen utama)   = kasih arahan, sampaikan perintah, terima jawaban
+Captain (commander) = mengatur prajurit, susun tugas, memutus hasil
+Prajurit (11 peran)  = mengerjakan tugasnya masing-masing
 ```
 
-Commander menjalankan lensa Planner, Worker A/B/C (tugas berbeda), Verifier,
-Challenger, Risk, Arbiter, dan Judge **secara internal dalam satu sesi**, lalu
-mengembalikan satu blok final. Agen utama tidak perlu menjalankan subagent lain.
+Tool `subagent` hanya ada di Boss, bukan di Captain. Karena itu Captain bekerja
+dua fase dan Boss jadi pengantar mekanis:
 
-Catatan jujur: Commander itu satu agen, jadi tidak ada paralelisme lintas proses.
-Untuk keputusan besar yang butuh cross-check nyata, tetap pakai jalur 11 subagent
-lewat `--plan` + tool `subagent`.
+1. **ORDERS** — Boss lempar tugas ke Captain:
+   ```sh
+   ./dispatch.zsh commander "FASE: ORDERS | <tugas>"
+   ```
+   Captain balas blok `ORDERS:` berisi baris `role: tugas` berbeda + `KRITERIA:`.
+   Boss ekstrak jadi plan:
+   ```sh
+   ./orders.zsh orders.txt plan.txt
+   ./dispatch.zsh --plan plan.txt        # prompt tiap prajurit
+   ```
+2. **PRAJURIT** — Boss jalankan prompt itu lewat tool `subagent` (boleh paralel).
+3. **VERDICT** — Boss kirim semua laporan kembali ke Captain:
+   ```sh
+   ./dispatch.zsh commander "FASE: VERDICT | <laporan A/B/C/...>"
+   ```
+   Captain yang menjalankan Verifier, Challenger, Risk, Arbiter, Judge dan
+   mengembalikan KEPUTUSAN akhir. Boss tinggal menyampaikan ke kamu.
+
+Captain yang **mengatur dan memutus**; Boss tidak ikut menilai, cuma menyampaikan
+perintah dan laporan 👌
 
 ## Mode & kecepatan
 
