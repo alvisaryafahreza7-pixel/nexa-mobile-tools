@@ -9,3 +9,7 @@
 result.txt
 __pycache__/
 .build/
+
+# Arena battle output
+arena/history/
+arena/tmp/

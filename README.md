@@ -10,6 +10,12 @@ Repo ini **hanya berisi wrapper & dokumentasi**. Tidak berisi source app, keysto
 - `bin/nexa-drive` — wrapper cepat: auto-focus, auto-retry, batch `run`
 - `docs/PHONE-CONTROL.md` — panduan supaya sesi kontrol HP tidak lama
 - `docs/CHANGELOG.md` — ringkasan perubahan tool & bridge
+- `arena/` — multi-agent arena (11 peran: Planner, Worker A/B/C, Verifier, Challenger, Risk, Arbiter, Synthesizer, Judge, Scribe)
+  - `arena/arena.zsh` — pembuat folder battle + prompt peran (mode `ringan` / `sedang` / `penuh`)
+  - `arena/orchestrate.zsh` — orkestrator otomatis, tiap peran jadi sesi OpenCode sendiri
+  - `arena/roles/` — 11 template prompt peran
+  - Diakses juga lewat symlink `~/NEXA-AGENT-ARENA`
+  - `arena/history/` dan `arena/tmp/` sengaja tidak di-commit (gitignore)
 
 ## Instalasi di Termux
 
